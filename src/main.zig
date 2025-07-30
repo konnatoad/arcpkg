@@ -52,10 +52,18 @@ pub fn main() !void {
             errdefer new_file.close();
 
             // Write starter JSON
-            new_file.writeAll("{ \"packages\": [] }\n") catch |werr| {
-                try stdout.print("Could not write starter JSON: {s}\n", .{@errorName(werr)});
-                return werr;
-            };
+            var buf = std.ArrayList(u8).init(gpa);
+            defer buf.deinit();
+            const writer = buf.writer();
+
+            var jw = std.json.Writer.init(writer, .{});
+            try jw.beginObject();
+            try jw.objectField("packages");
+            try jw.beginArray();
+            try jw.endArray();
+            try jw.endObject();
+
+            try new_file.writeAll(buf.items);
 
             break :blk new_file;
         },
