@@ -5,14 +5,25 @@ pub fn main() !void {
     var stdout = std.io.getStdOut().writer();
 
     // Try to get $HOME so we know where to put config
-    const home_dir = std.process.getEnvVarOwned(gpa, "$HOME") catch |err| {
-        try stdout.print("Failed to read HOME env var: {s}\n", .{@errorName(err)});
-        return err;
+    // Try XDG_CONFIG_HOME first
+    const config_root = std.process.getEnvVarOwned(gpa, "XDG_CONFIG_HOME") catch |err| switch (err) {
+        error.EnvironmentVariableNotFound => blk: {
+            // fallback to HOME/.config
+            const home_dir = std.process.getEnvVarOwned(gpa, "HOME") catch |h_err| {
+                try stdout.print("Neither XDG_CONFIG_HOME nor HOME set. Cannot locate config directory.\n", .{});
+                return h_err;
+            };
+            errdefer gpa.free(home_dir);
+
+            const joined = try std.fs.path.join(gpa, &.{ home_dir, ".config" });
+            break :blk joined;
+        },
+        else => return err,
     };
-    errdefer gpa.free(home_dir);
+    errdefer gpa.free(config_root);
 
     // Build ~/.config/arcpkg path
-    const config_dir = std.fs.path.join(gpa, &.{ home_dir, ".config", "arcpkg" }) catch |err| {
+    const config_dir = std.fs.path.join(gpa, &.{ config_root, "arcpkg" }) catch |err| {
         try stdout.print("Could now build config directory path: {s}\n", .{@errorName(err)});
         return err;
     };
@@ -41,7 +52,7 @@ pub fn main() !void {
             errdefer new_file.close();
 
             // Write starter JSON
-            new_file.writeAll(" { \"packages\": [] }\n") catch |werr| {
+            new_file.writeAll("{ \"packages\": [] }\n") catch |werr| {
                 try stdout.print("Could not write starter JSON: {s}\n", .{@errorName(werr)});
                 return werr;
             };
