@@ -56,7 +56,7 @@ pub fn main() !void {
             defer buf.deinit();
             const writer = buf.writer();
 
-            var jw = std.json.Writer.init(writer, .{});
+            var jw = std.json.writeStream(writer, .{});
             try jw.beginObject();
             try jw.objectField("packages");
             try jw.beginArray();
