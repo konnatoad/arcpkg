@@ -1,0 +1,43 @@
+# Zig build artifacts
+zig-out/
+.zig-cache/
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.pdb
+
+# Debugging and profiling files
+*.profraw
+*.profdata
+*.gcda
+*.gcno
+
+# OS / Editor junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.swp
+*.swo
+*.swn
+*.swm
+*~
+*.tmp
+
+# VSCode / JetBrains / etc.
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Backups
+*.bak
+*.old
+
+# If you ever use C interop, ignore generated bindings
+*.h
+*.c
